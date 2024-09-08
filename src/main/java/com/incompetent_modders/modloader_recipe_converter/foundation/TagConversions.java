@@ -1,21 +1,29 @@
 package com.incompetent_modders.modloader_recipe_converter.foundation;
 
+import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicReference;
+
 public enum TagConversions {
-    INGOT("c:{}_ingots", "forge:ingots/{}"),
-    NUGGET("c:{}_nuggets", "forge:nuggets/{}"),
-    GEM("c:{}_gems", "forge:gems/{}"),
-    DUST("c:{}_dusts", "forge:dusts/{}"),
-    PLATE("c:{}_plates", "forge:plates/{}"),
-    GEAR("c:{}_gears", "forge:gears/{}"),
-    ROD("c:{}_rods", "forge:rods/{}"),
-    BLOCK("c:{}_blocks", "forge:storage_blocks/{}"),
-    ORE("c:{}_ores", "forge:ores/{}"),
-    COIN("c:{}_coins", "forge:coins/{}"),
-    CRYSTAL("c:{}_crystals", "forge:crystals/{}"),
-    DYE("c:{}_dyes", "forge:dyes/{}"),
-    RAW_MATERIAL("c:raw_{}_ores", "forge:raw_materials/{}"),
+    INGOT("{}_ingots", "ingots/{}"),
+    NUGGET("{}_nuggets", "nuggets/{}"),
+    GEM("{}_gems", "gems/{}"),
+    DUST("{}_dusts", "dusts/{}"),
+    PLATE("{}_plates", "plates/{}"),
+    GEAR("{}_gears", "gears/{}"),
+    ROD("{}_rods", "rods/{}"),
+    BLOCK("{}_blocks", "storage_blocks/{}"),
+    ORE("{}_ores", "ores/{}"),
+    COIN("{}_coins", "coins/{}"),
+    CRYSTAL("{}_crystals", "crystals/{}"),
+    DYE("{}_dyes", "dyes/{}"),
+    RAW_MATERIAL("raw_{}_ores", "raw_materials/{}"),
+    TINY_DUSTS("{}_tiny_dusts", "tiny_dusts/{}"),
+    SMALL_DUSTS("{}_small_dusts", "small_dusts/{}"),
+    SEEDS("{}_seeds", "seeds/{}"),
+    SAPLINGS("{}_saplings", "saplings/{}"),
     ;
-    
+    private static final String fabricTag = "c:";
+    private static final String forgeTag = "forge:";
     private final String fabricFormat;
     private final String forgeFormat;
     
@@ -33,10 +41,12 @@ public enum TagConversions {
     }
     
     public static String simpleToC(String name) {
-        return name.replace("forge:", "c:");
+        System.out.println("Converting " + name + " to " + name.replace(forgeTag, fabricTag));
+        return name.replace(forgeTag, fabricTag);
     }
     public static String simpleToForge(String name) {
-        return name.replace("c:", "forge:");
+        System.out.println("Converting " + name + " to " + name.replace(fabricTag, forgeTag));
+        return name.replace(fabricTag, forgeTag);
     }
     public static String toFabric(String forgeTag) {
         if (forgeTag == null || !forgeTag.startsWith("forge:")) {
@@ -45,35 +55,22 @@ public enum TagConversions {
         String[] parts = forgeTag.split(":");
         String domain = parts[0];
         String path = parts[1];
-        
+        AtomicReference<String> fabricTagResult = new AtomicReference<>();
         if (path.contains("/")) {
             String[] pathParts = path.split("/");
             String category = pathParts[0];
             String material = pathParts[1];
-            
-            return switch (category) {
-                case "ingots" -> "c:" + material + "_ingots";
-                case "nuggets" -> "c:" + material + "_nuggets";
-                case "gems" -> "c:" + material + "_gems";
-                case "dusts" -> "c:" + material + "_dusts";
-                case "plates" -> "c:" + material + "_plates";
-                case "gears" -> "c:" + material + "_gears";
-                case "rods" -> "c:" + material + "_rods";
-                case "storage_blocks" -> "c:" + material + "_blocks";
-                case "ores" -> "c:" + material + "_ores";
-                case "coins" -> "c:" + material + "_coins";
-                case "crystals" -> "c:" + material + "_crystals";
-                case "dyes" -> "c:" + material + "_dyes";
-                case "raw_materials" -> "c:raw_" + material + "_ores";
-                case "tiny_dusts" -> "c:" + material + "_tiny_dusts";
-                case "small_dusts" -> "c:" + material + "_small_dusts";
-                case "seeds" -> "c:" + material + "_seeds";
-                case "saplings" -> "c:" + material + "_saplings";
-                default -> "c:" + path.replace("/", "_");
-            };
+            for (TagConversions conversion : TagConversions.values()) {
+                String forgeFormat = conversion.getForgeFormat().replace("{}", "");
+                if (category.equals(conversion.getForgeFormat().replace("/{}", ""))) {
+                    fabricTagResult.set(fabricTag + conversion.getFabricFormat().replace("{}", material));
+                }
+            }
         } else {
-            return "c:" + path;
+            fabricTagResult.set(fabricTag + path);
         }
+        System.out.printf("Converted " + forgeTag + " to " + fabricTagResult.get());
+        return fabricTagResult.get();
     }
     
     public static String toForge(String fabricTag) {
@@ -83,44 +80,54 @@ public enum TagConversions {
         String[] parts = fabricTag.split(":");
         String domain = parts[0];
         String material = parts[1];
-        if (material.endsWith("_ingots")) {
-            return "forge:ingots/" + material.replace("_ingots", "");
-        } else if (material.endsWith("_nuggets")) {
-            return "forge:nuggets/" + material.replace("_nuggets", "");
-        } else if (material.endsWith("_gems")) {
-            return "forge:gems/" + material.replace("_gems", "");
-        } else if (material.endsWith("_dusts")) {
-            return "forge:dusts/" + material.replace("_dusts", "");
-        } else if (material.endsWith("_plates")) {
-            return "forge:plates/" + material.replace("_plates", "");
-        } else if (material.endsWith("_gears")) {
-            return "forge:gears/" + material.replace("_gears", "");
-        } else if (material.endsWith("_rods")) {
-            return "forge:rods/" + material.replace("_rods", "");
-        } else if (material.endsWith("_blocks")) {
-            return "forge:storage_blocks/" + material.replace("_blocks", "");
-        } else if (material.endsWith("_ores")) {
-            return "forge:ores/" + material.replace("_ores", "");
-        } else if (material.endsWith("_coins")) {
-            return "forge:coins/" + material.replace("_coins", "");
-        } else if (material.endsWith("_crystals")) {
-            return "forge:crystals/" + material.replace("_crystals", "");
-        } else if (material.endsWith("_dyes")) {
-            return "forge:dyes/" + material.replace("_dyes", "");
-        } else if (material.startsWith("raw_") && material.endsWith("_ores")) {
-            return "forge:raw_materials/" + material.replace("raw_", "").replace("_ores", "");
-        } else if (material.endsWith("_tiny_dusts")) {
-            return "forge:tiny_dusts/" + material.replace("_tiny_dusts", "");
-        } else if (material.endsWith("_small_dusts")) {
-            return "forge:small_dusts/" + material.replace("_small_dusts", "");
-        } else if (material.endsWith("_seeds")) {
-            return "forge:seeds/" + material.replace("_seeds", "");
-        } else if (material.endsWith("_saplings")) {
-            return "forge:saplings/" + material.replace("_saplings", "");
+        AtomicReference<String> forgeTagResult = new AtomicReference<>();
+        for (TagConversions conversion : TagConversions.values()) {
+            String fabricFormat = conversion.getFabricFormat().replace("{}", "");
+            if (material.endsWith(fabricFormat)) {
+                System.out.println("Found " + fabricFormat + " in " + material);
+                material.replace(fabricFormat, "");
+                forgeTagResult.set(forgeTag + conversion.getForgeFormat().replace("{}", material));
+            } else {
+                forgeTagResult.set(forgeTag + material);
+            }
         }
-        else {
-            return "forge:" + material;
-        }
+        //if (material.endsWith("_ingots")) {
+        //    return "forge:ingots/" + material.replace("_ingots", "");
+        //} else if (material.endsWith("_nuggets")) {
+        //    return "forge:nuggets/" + material.replace("_nuggets", "");
+        //} else if (material.endsWith("_gems")) {
+        //    return "forge:gems/" + material.replace("_gems", "");
+        //} else if (material.endsWith("_dusts")) {
+        //    return "forge:dusts/" + material.replace("_dusts", "");
+        //} else if (material.endsWith("_plates")) {
+        //    return "forge:plates/" + material.replace("_plates", "");
+        //} else if (material.endsWith("_gears")) {
+        //    return "forge:gears/" + material.replace("_gears", "");
+        //} else if (material.endsWith("_rods")) {
+        //    return "forge:rods/" + material.replace("_rods", "");
+        //} else if (material.endsWith("_blocks")) {
+        //    return "forge:storage_blocks/" + material.replace("_blocks", "");
+        //} else if (material.endsWith("_ores")) {
+        //    return "forge:ores/" + material.replace("_ores", "");
+        //} else if (material.endsWith("_coins")) {
+        //    return "forge:coins/" + material.replace("_coins", "");
+        //} else if (material.endsWith("_crystals")) {
+        //    return "forge:crystals/" + material.replace("_crystals", "");
+        //} else if (material.endsWith("_dyes")) {
+        //    return "forge:dyes/" + material.replace("_dyes", "");
+        //} else if (material.startsWith("raw_") && material.endsWith("_ores")) {
+        //    return "forge:raw_materials/" + material.replace("raw_", "").replace("_ores", "");
+        //} else if (material.endsWith("_tiny_dusts")) {
+        //    return "forge:tiny_dusts/" + material.replace("_tiny_dusts", "");
+        //} else if (material.endsWith("_small_dusts")) {
+        //    return "forge:small_dusts/" + material.replace("_small_dusts", "");
+        //} else if (material.endsWith("_seeds")) {
+        //    return "forge:seeds/" + material.replace("_seeds", "");
+        //} else if (material.endsWith("_saplings")) {
+        //    return "forge:saplings/" + material.replace("_saplings", "");
+        //}
+        System.out.printf("Converted " + fabricTag + " to " + forgeTagResult.get());
+        return forgeTagResult.get();
     }
     
 }

@@ -84,15 +84,17 @@ public class Main {
                         ObjectMapper mapper = new ObjectMapper();
                         mapper.enable(SerializationFeature.INDENT_OUTPUT);
                         ObjectNode jsonNode = (ObjectNode) mapper.readTree(file);
-                        if (jsonNode.has("info")) {
-                            JOptionPane.showMessageDialog(window, "This file has already been converted.", "Error", JOptionPane.ERROR_MESSAGE);
+                        if (jsonNode.has("convertedTo") && jsonNode.get("convertedTo").asText().equals(getConvert(convertingTo.getSelectedItem()).getName())) {
                             System.out.println(file.getAbsolutePath() + " has already been converted.");
-                            return;
+                            continue;
                         }
                         // Modify the JSON parameters as needed
                         TagConverting.convertItemTag(jsonNode, getConvert(convertingFrom.getSelectedItem()), getConvert(convertingTo.getSelectedItem()));
                         TagConverting.convertFluidTag(jsonNode, getConvert(convertingFrom.getSelectedItem()), getConvert(convertingTo.getSelectedItem()));
                         AmountConverting.convertFluidAmount(jsonNode, getConvert(convertingFrom.getSelectedItem()), getConvert(convertingTo.getSelectedItem()));
+                        jsonNode.put("info", "This recipe has been modified by the Incompetent Modders Recipe Converter.");
+                        jsonNode.put("convertedFrom", getConvert(convertingFrom.getSelectedItem()).getName());
+                        jsonNode.put("convertedTo", getConvert(convertingTo.getSelectedItem()).getName());
                         // Write the modified JSON back to the file
                         mapper.writeValue(file, jsonNode);
                         
